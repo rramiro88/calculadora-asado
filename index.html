@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Asado</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { text-align: center; }
+    .persona { margin-bottom: 10px; }
+    input { margin: 2px; }
+    button { margin: 10px 0; padding: 6px 12px; }
+    .resultado { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Calculadora de Asado</h1>
+
+  <div id="personas"></div>
+  <button onclick="agregarPersona()">➕ Agregar persona</button>
+  <button onclick="calcular()">📊 Calcular</button>
+
+  <div id="resultado" class="resultado"></div>
+
+  <script>
+    let contador = 0;
+
+    function agregarPersona() {
+      contador++;
+      const div = document.createElement("div");
+      div.className = "persona";
+      div.innerHTML = `
+        <input placeholder="Nombre" id="nombre${contador}">
+        Gastó: <input type="number" id="gasto${contador}" value="0">
+        Comió <input type="checkbox" id="comio${contador}" checked>
+        Tomó <input type="checkbox" id="tomo${contador}" checked>
+      `;
+      document.getElementById("personas").appendChild(div);
+    }
+
+    function calcular() {
+      let personas = [];
+      for (let i = 1; i <= contador; i++) {
+        personas.push({
+          nombre: document.getElementById("nombre"+i).value || "Persona "+i,
+          gasto: parseFloat(document.getElementById("gasto"+i).value) || 0,
+          comio: document.getElementById("comio"+i).checked,
+          tomo: document.getElementById("tomo"+i).checked
+        });
+      }
+
+      let totalComida = personas.filter(p=>p.comio).length;
+      let totalBebida = personas.filter(p=>p.tomo).length;
+      let gastoComida = personas.reduce((s,p)=>s+(p.comio?p.gasto:0),0);
+      let gastoBebida = personas.reduce((s,p)=>s+(p.tomo?p.gasto:0),0);
+      let gastoExtra = personas.reduce((s,p)=>s+p.gasto,0) - (gastoComida+gastoBebida);
+
+      let costoComida = (gastoComida+ (gastoExtra/2)) / (totalComida||1);
+      let costoBebida = (gastoBebida+ (gastoExtra/2)) / (totalBebida||1);
+
+      let resultado = "";
+      personas.forEach(p=>{
+        let debe = (p.comio?costoComida:0) + (p.tomo?costoBebida:0);
+        let balance = debe - p.gasto;
+        resultado += `<p><b>${p.nombre}</b>: ${balance>0?"debe $"+balance:balance<0?"recibe $"+(-balance):"ok"}</p>`;
+      });
+
+      document.getElementById("resultado").innerHTML = resultado;
+    }
+  </script>
+</body>
+</html>
