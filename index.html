@@ -4,20 +4,71 @@
   <meta charset="UTF-8">
   <title>Calculadora de Asado</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { text-align: center; }
-    .persona { margin-bottom: 10px; }
-    input { margin: 2px; }
-    button { margin: 10px 0; padding: 6px 12px; }
-    .resultado { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #b22222;
+      margin-bottom: 20px;
+    }
+    .persona {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    input[type="text"], input[type="number"] {
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px 5px 0 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { opacity: 0.9; }
+    .agregar { background: #2e8b57; color: white; }
+    .calcular { background: #b22222; color: white; }
+    .resultado {
+      margin-top: 20px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .resumen {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    .persona-resultado {
+      margin: 6px 0;
+      padding: 6px;
+      border-bottom: 1px solid #eee;
+    }
+    .debe { color: #b22222; font-weight: bold; }
+    .recibe { color: #2e8b57; font-weight: bold; }
+    .ok { color: #555; font-style: italic; }
   </style>
 </head>
 <body>
-  <h1>Calculadora de Asado</h1>
+  <h1>🍖 Calculadora de Asado 🍻</h1>
 
   <div id="personas"></div>
-  <button onclick="agregarPersona()">➕ Agregar persona</button>
-  <button onclick="calcular()">📊 Calcular</button>
+  <button class="agregar" onclick="agregarPersona()">➕ Agregar persona</button>
+  <button class="calcular" onclick="calcular()">📊 Calcular</button>
 
   <div id="resultado" class="resultado"></div>
 
@@ -29,10 +80,10 @@
       const div = document.createElement("div");
       div.className = "persona";
       div.innerHTML = `
-        <input placeholder="Nombre" id="nombre${contador}">
-        Gastó: <input type="number" id="gasto${contador}" value="0">
-        Comió <input type="checkbox" id="comio${contador}" checked>
-        Tomó <input type="checkbox" id="tomo${contador}" checked>
+        <input type="text" placeholder="Nombre" id="nombre${contador}">
+        Gastó: <input type="number" id="gasto${contador}" value="0" min="0">
+        🍖 <label><input type="checkbox" id="comio${contador}" checked> Comió</label>
+        🍻 <label><input type="checkbox" id="tomo${contador}" checked> Tomó</label>
       `;
       document.getElementById("personas").appendChild(div);
     }
@@ -48,23 +99,42 @@
         });
       }
 
+      if (personas.length === 0) {
+        document.getElementById("resultado").innerHTML = "<p>No hay personas cargadas.</p>";
+        return;
+      }
+
+      let totalGastado = personas.reduce((s,p)=>s+p.gasto,0);
       let totalComida = personas.filter(p=>p.comio).length;
       let totalBebida = personas.filter(p=>p.tomo).length;
+
       let gastoComida = personas.reduce((s,p)=>s+(p.comio?p.gasto:0),0);
       let gastoBebida = personas.reduce((s,p)=>s+(p.tomo?p.gasto:0),0);
-      let gastoExtra = personas.reduce((s,p)=>s+p.gasto,0) - (gastoComida+gastoBebida);
+      let gastoExtra = totalGastado - (gastoComida + gastoBebida);
 
-      let costoComida = (gastoComida+ (gastoExtra/2)) / (totalComida||1);
-      let costoBebida = (gastoBebida+ (gastoExtra/2)) / (totalBebida||1);
+      let costoComida = (gastoComida + (gastoExtra/2)) / (totalComida||1);
+      let costoBebida = (gastoBebida + (gastoExtra/2)) / (totalBebida||1);
 
-      let resultado = "";
+      let resumen = `
+        <div class="resumen">
+          <p><b>Total gastado:</b> $${totalGastado}</p>
+          <p><b>Comida:</b> $${gastoComida} ÷ ${totalComida} personas = $${costoComida.toFixed(2)} c/u</p>
+          <p><b>Bebida:</b> $${gastoBebida} ÷ ${totalBebida} personas = $${costoBebida.toFixed(2)} c/u</p>
+          <p><b>Extra (compartido mitad comida / mitad bebida):</b> $${gastoExtra}</p>
+        </div>
+      `;
+
+      let detalle = "";
       personas.forEach(p=>{
         let debe = (p.comio?costoComida:0) + (p.tomo?costoBebida:0);
         let balance = debe - p.gasto;
-        resultado += `<p><b>${p.nombre}</b>: ${balance>0?"debe $"+balance:balance<0?"recibe $"+(-balance):"ok"}</p>`;
+        let clase = balance>0 ? "debe" : balance<0 ? "recibe" : "ok";
+        detalle += `<div class="persona-resultado"><b>${p.nombre}</b>: <span class="${clase}">${
+          balance>0 ? "Debe $" + balance.toFixed(2) : balance<0 ? "Recibe $" + (-balance).toFixed(2) : "Está justo"
+        }</span></div>`;
       });
 
-      document.getElementById("resultado").innerHTML = resultado;
+      document.getElementById("resultado").innerHTML = resumen + detalle;
     }
   </script>
 </body>
