@@ -49,10 +49,12 @@ function agregarPersona(){
   document.getElementById("personas").appendChild(div);
 }
 
-function calcular(){
+function calcular() {
   let personas = [];
 
   for(let i=1; i<=contador; i++){
+    // si no existe el elemento, saltar (permite eliminar personas sin recargar)
+    if(!document.getElementById("nombre"+i)) continue;
     personas.push({
       nombre: document.getElementById("nombre"+i).value || "Persona "+i,
       gasto: parseFloat(document.getElementById("gasto"+i).value) || 0,
@@ -74,29 +76,62 @@ function calcular(){
   let comen = personas.filter(p=>p.come).length;
   let toman = personas.filter(p=>p.toma).length;
 
-  let costoComida = totalComida/(comen||1);
-  let costoBebida = totalBebida/(toman||1);
-  let costoExtra = totalExtra/personas.length;
+  let costoComida = comen? totalComida/comen : 0;
+  let costoBebida = toman? totalBebida/toman : 0;
+  let costoExtra = personas.length? totalExtra/personas.length : 0;
 
   let resumen = `
     <h3>Resumen</h3>
-    <p><b>Total comida:</b> $${totalComida} → $${costoComida.toFixed(2)} por persona que comió</p>
-    <p><b>Total bebida:</b> $${totalBebida} → $${costoBebida.toFixed(2)} por persona que tomó</p>
-    <p><b>Total extra:</b> $${totalExtra} → $${costoExtra.toFixed(2)} por cada uno</p>
+    <p><b>Total comida:</b> $${totalComida.toFixed(2)} → $${costoComida.toFixed(2)} por persona que comió</p>
+    <p><b>Total bebida:</b> $${totalBebida.toFixed(2)} → $${costoBebida.toFixed(2)} por persona que tomó</p>
+    <p><b>Total extra:</b> $${totalExtra.toFixed(2)} → $${costoExtra.toFixed(2)} por cada uno</p>
   `;
 
   let detalle = "";
+  let balances = {};
 
   personas.forEach(p=>{
     let debe = (p.come?costoComida:0) + (p.toma?costoBebida:0) + costoExtra;
-    let balance = debe - p.gasto;
-    let clase = balance>0 ? "debe" : balance<0 ? "recibe" : "";
+    let balance = p.gasto - debe; // positivo = pagó de más (recibe), negativo = debe
+    balances[p.nombre] = Math.round(balance*100)/100;
+    let clase = balance<0 ? "debe" : balance>0 ? "recibe" : "";
 
-    detalle += `<div class='item'><b>${p.nombre}</b>: <span class='${clase}'>${balance>0?"Debe $"+balance.toFixed(2):balance<0?"Recibe $"+(-balance).toFixed(2):"Justo"}</span></div>`;
+    detalle += `<div class='item'><b>${p.nombre}</b>: <span class='${clase}'>${
+      balance<0 ? "Debe $"+(-balance).toFixed(2) : balance>0 ? "Recibe $"+balance.toFixed(2) : "Justo"
+    }</span></div>`;
   });
 
   document.getElementById("resultado").innerHTML = resumen + detalle;
+
+  // Llamar a la función que genera los pagos sugeridos
+  if(typeof renderSettlements === 'function') renderSettlements(balances);
 }
+
+  // Settlements calculation
+  function renderSettlements(balances) {
+    const container = document.getElementById('settlements');
+    container.innerHTML = '';
+    const creditors = [];
+    const debtors = [];
+    for (const person in balances) {
+      if (balances[person] > 0) creditors.push({ name: person, amount: balances[person] });
+      else if (balances[person] < 0) debtors.push({ name: person, amount: -balances[person] });
+    }
+    creditors.sort((a, b) => b.amount - a.amount);
+    debtors.sort((a, b) => b.amount - a.amount);
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      const pay = Math.min(debtors[i].amount, creditors[j].amount);
+      const p = document.createElement('div');
+      p.textContent = `${debtors[i].name} debe pagar $${pay.toFixed(2)} a ${creditors[j].name}`;
+      container.appendChild(p);
+      debtors[i].amount -= pay;
+      creditors[j].amount -= pay;
+      if (debtors[i].amount === 0) i++;
+      if (creditors[j].amount === 0) j++;
+    }
+    if (!container.innerHTML.trim()) container.textContent = 'Todos están equilibrados, no hay deudas.';
+  }
 </script>
   <h2>Liquidación entre personas</h2>
   <div id="settlements" class="mt-4 p-3 border rounded bg-gray-50 text-sm"></div>
