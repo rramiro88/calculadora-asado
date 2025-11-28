@@ -2,140 +2,101 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Calculadora de Asado</title>
+  <title>Calculadora de Asado Mejorada</title>
   <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      color: #b22222;
-      margin-bottom: 20px;
-    }
-    .persona {
-      background: #fff;
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    input[type="text"], input[type="number"] {
-      padding: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin: 5px;
-    }
-    button {
-      padding: 10px 15px;
-      margin: 10px 5px 0 0;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover { opacity: 0.9; }
-    .agregar { background: #2e8b57; color: white; }
-    .calcular { background: #b22222; color: white; }
-    .resultado {
-      margin-top: 20px;
-      background: #fff;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    .resumen {
-      background: #f1f1f1;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-    }
-    .persona-resultado {
-      margin: 6px 0;
-      padding: 6px;
-      border-bottom: 1px solid #eee;
-    }
-    .debe { color: #b22222; font-weight: bold; }
-    .recibe { color: #2e8b57; font-weight: bold; }
-    .ok { color: #555; font-style: italic; }
+    body { font-family: "Segoe UI", Arial; background:#f5f5f5; margin:0; padding:20px; }
+    h1 { text-align:center; color:#b22222; }
+    .card { background:#fff; padding:12px; margin:10px 0; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    input, select { padding:6px; margin:4px; border-radius:6px; border:1px solid #ccc; }
+    button { padding:10px 15px; border:none; border-radius:6px; margin:5px; cursor:pointer; font-weight:bold; }
+    .agregar { background:#2e8b57; color:#fff; }
+    .calcular { background:#b22222; color:#fff; }
+    .resultado { background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.15); margin-top:20px; }
+    .item { padding:6px; border-bottom:1px solid #eee; }
+    .debe { color:#b22222; font-weight:bold; }
+    .recibe { color:#2e8b57; font-weight:bold; }
   </style>
 </head>
 <body>
-  <h1>🍖 Calculadora de Asado 🍻</h1>
+<h1>🍖 Calculadora de Asado - Categorías</h1>
 
-  <div id="personas"></div>
-  <button class="agregar" onclick="agregarPersona()">➕ Agregar persona</button>
-  <button class="calcular" onclick="calcular()">📊 Calcular</button>
+<div id="personas"></div>
+<button class="agregar" onclick="agregarPersona()">➕ Agregar persona</button>
+<button class="calcular" onclick="calcular()">📊 Calcular</button>
 
-  <div id="resultado" class="resultado"></div>
+<div id="resultado" class="resultado"></div>
 
-  <script>
-    let contador = 0;
+<script>
+let contador = 0;
 
-    function agregarPersona() {
-      contador++;
-      const div = document.createElement("div");
-      div.className = "persona";
-      div.innerHTML = `
-        <input type="text" placeholder="Nombre" id="nombre${contador}">
-        Gastó: <input type="number" id="gasto${contador}" value="0" min="0">
-        🍖 <label><input type="checkbox" id="comio${contador}" checked> Comió</label>
-        🍻 <label><input type="checkbox" id="tomo${contador}" checked> Tomó</label>
-      `;
-      document.getElementById("personas").appendChild(div);
-    }
+function agregarPersona(){
+  contador++;
+  const div = document.createElement("div");
+  div.className = "card";
+  div.innerHTML = `
+    <input id="nombre${contador}" placeholder="Nombre">
+    Gastó: <input type="number" id="gasto${contador}" value="0" min="0">
+    Categoría:
+    <select id="categoria${contador}">
+      <option value="comida">🍖 Comida</option>
+      <option value="bebida">🍻 Bebida</option>
+      <option value="extra">🧾 Extra</option>
+    </select><br>
+    Participación:
+    <label><input type="checkbox" id="come${contador}" checked> Come</label>
+    <label><input type="checkbox" id="toma${contador}" checked> Toma</label>
+  `;
+  document.getElementById("personas").appendChild(div);
+}
 
-    function calcular() {
-      let personas = [];
-      for (let i = 1; i <= contador; i++) {
-        personas.push({
-          nombre: document.getElementById("nombre"+i).value || "Persona "+i,
-          gasto: parseFloat(document.getElementById("gasto"+i).value) || 0,
-          comio: document.getElementById("comio"+i).checked,
-          tomo: document.getElementById("tomo"+i).checked
-        });
-      }
+function calcular(){
+  let personas = [];
 
-      if (personas.length === 0) {
-        document.getElementById("resultado").innerHTML = "<p>No hay personas cargadas.</p>";
-        return;
-      }
+  for(let i=1; i<=contador; i++){
+    personas.push({
+      nombre: document.getElementById("nombre"+i).value || "Persona "+i,
+      gasto: parseFloat(document.getElementById("gasto"+i).value) || 0,
+      cat: document.getElementById("categoria"+i).value,
+      come: document.getElementById("come"+i).checked,
+      toma: document.getElementById("toma"+i).checked
+    });
+  }
 
-      let totalGastado = personas.reduce((s,p)=>s+p.gasto,0);
-      let totalComida = personas.filter(p=>p.comio).length;
-      let totalBebida = personas.filter(p=>p.tomo).length;
+  if(personas.length === 0){
+    document.getElementById("resultado").innerHTML = "<p>No hay datos cargados.</p>";
+    return;
+  }
 
-      let gastoComida = personas.reduce((s,p)=>s+(p.comio?p.gasto:0),0);
-      let gastoBebida = personas.reduce((s,p)=>s+(p.tomo?p.gasto:0),0);
-      let gastoExtra = totalGastado - (gastoComida + gastoBebida);
+  let totalComida = personas.filter(p=>p.cat==="comida").reduce((s,p)=>s+p.gasto,0);
+  let totalBebida = personas.filter(p=>p.cat==="bebida").reduce((s,p)=>s+p.gasto,0);
+  let totalExtra  = personas.filter(p=>p.cat==="extra").reduce((s,p)=>s+p.gasto,0);
 
-      let costoComida = (gastoComida + (gastoExtra/2)) / (totalComida||1);
-      let costoBebida = (gastoBebida + (gastoExtra/2)) / (totalBebida||1);
+  let comen = personas.filter(p=>p.come).length;
+  let toman = personas.filter(p=>p.toma).length;
 
-      let resumen = `
-        <div class="resumen">
-          <p><b>Total gastado:</b> $${totalGastado}</p>
-          <p><b>Comida:</b> $${gastoComida} ÷ ${totalComida} personas = $${costoComida.toFixed(2)} c/u</p>
-          <p><b>Bebida:</b> $${gastoBebida} ÷ ${totalBebida} personas = $${costoBebida.toFixed(2)} c/u</p>
-          <p><b>Extra (compartido mitad comida / mitad bebida):</b> $${gastoExtra}</p>
-        </div>
-      `;
+  let costoComida = totalComida/(comen||1);
+  let costoBebida = totalBebida/(toman||1);
+  let costoExtra = totalExtra/personas.length;
 
-      let detalle = "";
-      personas.forEach(p=>{
-        let debe = (p.comio?costoComida:0) + (p.tomo?costoBebida:0);
-        let balance = debe - p.gasto;
-        let clase = balance>0 ? "debe" : balance<0 ? "recibe" : "ok";
-        detalle += `<div class="persona-resultado"><b>${p.nombre}</b>: <span class="${clase}">${
-          balance>0 ? "Debe $" + balance.toFixed(2) : balance<0 ? "Recibe $" + (-balance).toFixed(2) : "Está justo"
-        }</span></div>`;
-      });
+  let resumen = `
+    <h3>Resumen</h3>
+    <p><b>Total comida:</b> $${totalComida} → $${costoComida.toFixed(2)} por persona que comió</p>
+    <p><b>Total bebida:</b> $${totalBebida} → $${costoBebida.toFixed(2)} por persona que tomó</p>
+    <p><b>Total extra:</b> $${totalExtra} → $${costoExtra.toFixed(2)} por cada uno</p>
+  `;
 
-      document.getElementById("resultado").innerHTML = resumen + detalle;
-    }
-  </script>
+  let detalle = "";
+
+  personas.forEach(p=>{
+    let debe = (p.come?costoComida:0) + (p.toma?costoBebida:0) + costoExtra;
+    let balance = debe - p.gasto;
+    let clase = balance>0 ? "debe" : balance<0 ? "recibe" : "";
+
+    detalle += `<div class='item'><b>${p.nombre}</b>: <span class='${clase}'>${balance>0?"Debe $"+balance.toFixed(2):balance<0?"Recibe $"+(-balance).toFixed(2):"Justo"}</span></div>`;
+  });
+
+  document.getElementById("resultado").innerHTML = resumen + detalle;
+}
+</script>
 </body>
 </html>
